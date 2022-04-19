@@ -1,23 +1,47 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import tw from "tailwind-rn";
+import moment from "moment-timezone";
+import { useNavigation } from "@react-navigation/native";
 
-import Card from "./card";
+import useButton from "../hooks/useButton";
+import Button from "../Button";
 
-function Row({ time, matches, navigation }) {
+function Row({ item }) {
+  const navigation = useNavigation();
+  const { url, hd, datetime, language, league, teams } = item || {};
+  const buttonId = `row__${url}`;
+  const { button, setButton } = useButton({ buttonId });
+  const isFocusing = useMemo(() => {
+    return buttonId === button;
+  }, [buttonId, button]);
   return (
-    <View style={tw(`flex flex-row mb-4`)}>
-      <View style={tw(`w-16 flex flex items-center justify-center`)}>
-        <Text style={tw(`text-gray-100`)}>{time}</Text>
+    <Button
+      onPress={() => {
+        navigation.navigate("Player", {
+          url,
+        });
+      }}
+      onFocus={() => {
+        setButton(buttonId);
+      }}
+    >
+      <View
+        style={tw(
+          `flex flex-row bg-gray-700 p-4 opacity-100 text-white border-gray-${
+            isFocusing ? "200" : "600"
+          } ${isFocusing ? "bg-gray-300" : ""}`
+        )}
+      >
+        <Text style={tw(`text-white`)}>
+          {moment(datetime).format("MM月DD日 hh:mm")}
+        </Text>
+        <Text style={tw(`text-white`)}>{league}</Text>
+        <Text style={tw(`text-white`)}>{teams}</Text>
+        <Text style={tw(`text-white`)}>{language}</Text>
+        <Text style={tw(`text-white`)}>{hd ? "高清" : ""}</Text>
       </View>
-      <View style={tw(`flex flex-row flex-grow flex-wrap`)}>
-        {Array.isArray(matches)
-          ? matches.map((m) => {
-              return <Card match={m} key={m.id} />;
-            })
-          : null}
-      </View>
-    </View>
+    </Button>
   );
 }
 

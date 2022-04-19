@@ -6,17 +6,27 @@ import moment from "moment-timezone";
 
 import { ButtonProvider } from "../hooks/useButton";
 import Row from "./row";
+import Matches from "./matches";
 import Spinner from "./spinner";
+import { useMemo } from "react";
 
-const url = "https://ds04s2074b.execute-api.ap-east-1.amazonaws.com/api/heibai";
+// const url = "https://ds04s2074b.execute-api.ap-east-1.amazonaws.com/api/heibai";
+// const url =
+//   "https://dfqoxdjhdf.execute-api.ap-east-1.amazonaws.com/api/getmatches?all=true";
+const url = "https://334p0jpuqf.execute-api.us-east-1.amazonaws.com/prod";
 
 const Index = ({ navigation }) => {
   const appState = useRef(AppState.currentState);
   const [loading, setLoading] = useState(false);
-  const [list, setList] = useState(null);
+  const [list, setList] = useState({});
+  const [sport, setSport] = useState("足球");
   useEffect(() => {
     fetchMatches();
   }, []);
+
+  const items = useMemo(() => {
+    return typeof list === "object" ? list[sport] : [];
+  });
 
   const _handleAppStateChange = (nextAppState) => {
     if (
@@ -42,21 +52,8 @@ const Index = ({ navigation }) => {
       .get(url)
       .then(({ data }) => {
         setLoading(false);
-        if (Array.isArray(data) && data.length > -1) {
-          const m = data.reduce((obj, match) => {
-            const dt = moment(match.start);
-            const time = dt.tz("Asia/Hong_Kong").format("kk:mm");
-            if (obj[time] && Array.isArray(obj[time])) {
-              obj[time] = [...obj[time], match];
-            } else {
-              obj = {
-                ...obj,
-                [time]: [match],
-              };
-            }
-            return obj;
-          }, {});
-          setList(m);
+        if (typeof data === "object") {
+          setList(data);
         }
       })
       .catch((err) => {
@@ -68,17 +65,9 @@ const Index = ({ navigation }) => {
       <ScrollView style={tw(`min-h-full w-full bg-gray-800 py-5`)}>
         {loading ? (
           <Spinner />
-        ) : list ? (
-          Object.keys(list).map((time) => {
-            return (
-              <Row
-                time={time}
-                matches={list[time]}
-                key={time}
-                navigation={navigation}
-              />
-            );
-          })
+        ) : items ? (
+          // <SportList item={item} sport={sport} setSport={setSport} />
+          <Matches items={items} />
         ) : (
           <Text style={tw(`text-white`)}>無比賽</Text>
         )}
